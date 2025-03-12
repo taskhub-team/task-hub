@@ -1,0 +1,45 @@
+{
+  "extends": [
+    "@commitlint/config-conventional"
+  ],
+  "parserPreset": {
+    "parserOpts": {
+      "issuePrefixes": [
+        "THUB-"
+      ]
+    }
+  },
+  "rules": {
+    "subject-case": [
+      0
+    ],
+    "body-max-line-length": [
+      0
+    ],
+    "subject-empty": [
+      2,
+      "never"
+    ],
+    "references-empty": [
+      2,
+      "never"
+    ],
+    "type-enum": [
+      2,
+      "always",
+      [
+        "feat",
+        "fix",
+        "docs",
+        "style",
+        "refactor",
+        "perf",
+        "test",
+        "chore",
+        "ci",
+        "build",
+        "revert"
+      ]
+    ]
+  }
+}
