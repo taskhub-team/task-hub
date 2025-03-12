@@ -16,6 +16,11 @@
     "body-max-line-length": [
       0
     ],
+    "subject-max-length": [
+      2,
+      "always",
+      72
+    ],
     "subject-empty": [
       2,
       "never"
