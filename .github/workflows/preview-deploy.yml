@@ -1,0 +1,63 @@
+name: Preview Environment Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Preview environment to deploy to"
+        required: true
+        default: "preview1"
+        type: choice
+        options:
+          - preview1
+          - preview2
+
+jobs:
+  deploy-preview:
+    name: Deploy to Preview Environment
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build project
+        run: pnpm build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_ENVIRONMENT: ${{ github.event.inputs.environment }}
+          VITE_LOGGING_LEVEL: "debug"
+
+      - name: Deploy to Azure Static Web Apps
+        id: deploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: "dist"
+          api_location: ""
+          skip_app_build: true
+          deployment_environment: ${{ github.event.inputs.environment }}
+
+      - name: Post deployment notification
+        if: success()
+        run: |
+          echo "🚀 Successfully deployed to ${{ github.event.inputs.environment }} environment"
+          echo "URL: https://${{ github.event.inputs.environment }}.taskhub.com"
