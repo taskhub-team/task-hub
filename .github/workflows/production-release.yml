@@ -57,41 +57,6 @@ jobs:
         id: get-version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-      - name: Create build artifact
-        run: |
-          cd dist
-          zip -r ../taskhub-production-v${{ steps.get-version.outputs.version }}.zip .
-          cd ..
-          echo "Build timestamp: $(date)" > build-info.txt
-          echo "Version: ${{ steps.get-version.outputs.version }}" >> build-info.txt
-          echo "Commit: ${{ github.sha }}" >> build-info.txt
-          echo "Branch: main" >> build-info.txt
-
-      - name: Upload build artifact to GitHub
-        uses: actions/upload-artifact@v4
-        with:
-          name: taskhub-production-v${{ steps.get-version.outputs.version }}
-          path: |
-            taskhub-production-v${{ steps.get-version.outputs.version }}.zip
-            build-info.txt
-          retention-days: 90
-
-      - name: Login to Azure
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Make script executable
-        run: chmod +x .github/scripts/upload-prod-artifact.sh
-
-      - name: Upload build to Azure Blob Storage
-        id: upload_artifact
-        run: |
-          ./.github/scripts/upload-prod-artifact.sh \
-            ${{ steps.get-version.outputs.version }} \
-            ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }} \
-            ${{ github.sha }}
-
       - name: Deploy to Azure Static Web Apps
         id: deploy
         uses: Azure/static-web-apps-deploy@v1
@@ -107,6 +72,4 @@ jobs:
         if: success()
         run: |
           echo "🚀 Successfully deployed version ${{ steps.get-version.outputs.version }} to production"
-          echo "URL: https://kind-water-0ea27f900.6.azurestaticapps.net"
-          echo "Build artifact: taskhub-production-v${{ steps.get-version.outputs.version }}.zip stored in Azure Blob Storage"
-          echo "Download link: ${{ steps.upload_artifact.outputs.download_url }}"
+          echo "URL: https://taskhub.com"
