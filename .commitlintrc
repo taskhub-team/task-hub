@@ -16,6 +16,9 @@
     "body-max-line-length": [
       0
     ],
+    "footer-max-line-length": [
+      0
+    ],
     "subject-max-length": [
       2,
       "always",
