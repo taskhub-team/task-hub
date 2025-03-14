@@ -10,10 +10,10 @@ echo "Uploading production build artifact to Azure Storage..."
 
 # Create container if it doesn't exist
 echo "Checking if container exists..."
-az storage container exists --name builds --account-name $STORAGE_ACCOUNT --auth-mode login
+az storage container exists --name builds --account-name $STORAGE_ACCOUNT --auth-mode key
 if [ $? -ne 0 ]; then
   echo "Container doesn't exist, creating..."
-  az storage container create --name builds --account-name $STORAGE_ACCOUNT --auth-mode login
+  az storage container create --name builds --account-name $STORAGE_ACCOUNT --auth-mode key
 fi
 
 # Upload build artifact with version in filename
@@ -23,7 +23,7 @@ az storage blob upload \
   --name "production/taskhub-v${VERSION}.zip" \
   --file taskhub-production-v${VERSION}.zip \
   --account-name $STORAGE_ACCOUNT \
-  --auth-mode login
+  --auth-mode key
 
 # Upload build info
 echo "Uploading build info..."
@@ -32,7 +32,7 @@ az storage blob upload \
   --name "production/build-info-v${VERSION}.txt" \
   --file build-info.txt \
   --account-name $STORAGE_ACCOUNT \
-  --auth-mode login
+  --auth-mode key
 
 # Tag as latest production build
 echo "Creating latest reference..."
@@ -42,7 +42,7 @@ az storage blob copy start \
   --destination-container builds \
   --destination-blob "production/taskhub-latest.zip" \
   --account-name $STORAGE_ACCOUNT \
-  --auth-mode login
+  --auth-mode key
 
 echo "Artifact upload complete"
 echo "::set-output name=download_url::https://${STORAGE_ACCOUNT}.blob.core.windows.net/builds/production/taskhub-latest.zip"

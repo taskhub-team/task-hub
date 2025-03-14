@@ -11,10 +11,10 @@ echo "Uploading preview environment build artifact to Azure Storage..."
 
 # Create container if it doesn't exist
 echo "Checking if container exists..."
-az storage container exists --name builds --account-name $STORAGE_ACCOUNT --auth-mode login
+az storage container exists --name builds --account-name $STORAGE_ACCOUNT --auth-mode key
 if [ $? -ne 0 ]; then
   echo "Container doesn't exist, creating..."
-  az storage container create --name builds --account-name $STORAGE_ACCOUNT --auth-mode login
+  az storage container create --name builds --account-name $STORAGE_ACCOUNT --auth-mode key
 fi
 
 # Upload build artifact
@@ -24,7 +24,7 @@ az storage blob upload \
   --name "${ENV_NAME}/taskhub-${ENV_NAME}-${TIMESTAMP}.zip" \
   --file taskhub-${ENV_NAME}-${TIMESTAMP}.zip \
   --account-name $STORAGE_ACCOUNT \
-  --auth-mode login
+  --auth-mode key
 
 # Upload build info
 echo "Uploading build info..."
@@ -33,7 +33,7 @@ az storage blob upload \
   --name "${ENV_NAME}/build-info-${TIMESTAMP}.txt" \
   --file build-info.txt \
   --account-name $STORAGE_ACCOUNT \
-  --auth-mode login
+  --auth-mode key
 
 # Tag as latest for this preview environment
 echo "Creating latest reference..."
@@ -43,7 +43,7 @@ az storage blob copy start \
   --destination-container builds \
   --destination-blob "${ENV_NAME}/taskhub-latest.zip" \
   --account-name $STORAGE_ACCOUNT \
-  --auth-mode login
+  --auth-mode key
 
 echo "Artifact upload complete"
 echo "::set-output name=download_url::https://${STORAGE_ACCOUNT}.blob.core.windows.net/builds/${ENV_NAME}/taskhub-latest.zip"
