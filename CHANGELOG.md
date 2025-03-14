@@ -1,3 +1,9 @@
+## [1.0.2](https://github.com/taskhub-team/task-hub/compare/v1.0.1...v1.0.2) (2025-03-14)
+
+### Bug Fixes
+
+- **arch:** THUB-11 🚧 add github app for making automated semantic release ([#23](https://github.com/taskhub-team/task-hub/issues/23)) ([#24](https://github.com/taskhub-team/task-hub/issues/24)) ([d908139](https://github.com/taskhub-team/task-hub/commit/d908139d19035d5bcd650819b6ebfcbb2f210476))
+
 ## [1.0.1](https://github.com/taskhub-team/task-hub/compare/v1.0.0...v1.0.1) (2025-03-14)
 
 ### Bug Fixes
