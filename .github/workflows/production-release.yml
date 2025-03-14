@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch: # Added manual trigger option
+    inputs:
+      force_release:
+        description: "Force a release (bypass some checks)"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -17,6 +24,14 @@ jobs:
     environment: production
 
     steps:
+      - name: Debug Workflow Trigger Information
+        run: |
+          echo "Triggered by: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Commit Message: $(git log -1 --pretty=%B)"
+          echo "Repository: ${{ github.repository }}"
+          echo "Actor: ${{ github.actor }}"
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -45,6 +60,10 @@ jobs:
           private_key: ${{ secrets.PRIVATE_KEY }}
           installation_id: ${{ secrets.INSTALLATION_ID }}
 
+      - name: Validate Conventional Commits
+        run: |
+          npx commitlint --from HEAD~1 --to HEAD || echo "Commit message validation failed"
+
       - name: Run tests
         run: pnpm test || echo "No tests implemented yet"
 
@@ -59,7 +78,14 @@ jobs:
         id: semantic
         env:
           GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
-        run: pnpm release
+        run: |
+          # Add force release flag if manually triggered with force option
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.force_release }}" == "true" ]]; then
+            echo "Force release enabled. Bypassing some checks."
+            pnpm release --no-ci
+          else
+            pnpm release
+          fi
 
       - name: Get new version
         id: get-version
@@ -118,3 +144,10 @@ jobs:
           echo "URL: https://kind-water-0ea27f900.6.azurestaticapps.net"
           echo "Build artifact: taskhub-production-v${{ steps.get-version.outputs.version }}.zip stored in Azure Blob Storage"
           echo "Download link: ${{ steps.upload_artifact.outputs.download_url }}"
+
+      - name: Failure Debugging
+        if: failure()
+        run: |
+          echo "Release or deployment failed. Check previous steps for detailed errors."
+          echo "Semantic Release Step Status: ${{ steps.semantic.outcome }}"
+          echo "Deploy Step Status: ${{ steps.deploy.outcome }}"
