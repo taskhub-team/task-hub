@@ -59,4 +59,4 @@ jobs:
         if: success()
         run: |
           echo "🚀 Successfully deployed to ${{ github.event.inputs.environment }} environment"
-          echo "URL: https://${{ github.event.inputs.environment }}.taskhub.com"
+          echo "URL: https://${{ github.event.inputs.environment }}--wonderful-stone-059600500.6.azurestaticapps.net"

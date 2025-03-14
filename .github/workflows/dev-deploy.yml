@@ -51,4 +51,4 @@ jobs:
         if: success()
         run: |
           echo "🚀 Successfully deployed to development environment"
-          echo "URL: https://dev.taskhub.com"
+          echo "URL: https://green-grass-07a60cd00.6.azurestaticapps.net"

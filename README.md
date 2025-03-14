@@ -33,7 +33,7 @@ TaskHub uses a robust CI/CD pipeline with GitHub Actions that includes:
 
    - **Development**: Automatic deployment when code is merged to `develop`
    - **Preview**: Manual deployment for feature testing
-   - **Production**: Automatic deployment with semantic versioning when code is merged to `main`
+   - **Production**: Automatic deployment with semantic versioning when code is merged to `main`. Final PR for version bump which needs to be merged manually
 
 3. **Build Access**
    - Production builds: `https://<storage-account>.blob.core.windows.net/builds/production/taskhub-latest.zip`
@@ -49,6 +49,13 @@ This approach simulates an enterprise-level artifact management system with prop
 - `pnpm build` - Build for production
 - `pnpm lint` - Lint code
 - `pnpm release` - Manually trigger semantic-release
+
+## Links to Environments
+
+1. **[Development](https://green-grass-07a60cd00.6.azurestaticapps.net)**
+2. **[Preview Environment 1](https://preview1--wonderful-stone-059600500.6.azurestaticapps.net)**
+3. **[Preview Environment 2](https://preview2--wonderful-stone-059600500.6.azurestaticapps.net)**
+4. **[Production](https://kind-water-0ea27f900.6.azurestaticapps.net)**
 
 ## License
 
