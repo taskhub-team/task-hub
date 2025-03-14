@@ -53,8 +53,8 @@ This approach simulates an enterprise-level artifact management system with prop
 ## Links to Environments
 
 1. **[Development](https://green-grass-07a60cd00.6.azurestaticapps.net)**
-2. **[Preview Environment 1](https://preview1--wonderful-stone-059600500.6.azurestaticapps.net)**
-3. **[Preview Environment 2](https://preview2--wonderful-stone-059600500.6.azurestaticapps.net)**
+2. **[Preview Environment 1](https://wonderful-stone-059600500-preview1.eastasia.6.azurestaticapps.net)**
+3. **[Preview Environment 2](https://wonderful-stone-059600500-preview2.eastasia.6.azurestaticapps.net/)**
 4. **[Production](https://kind-water-0ea27f900.6.azurestaticapps.net)**
 
 ## License
