@@ -4,13 +4,6 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: # Added manual trigger option
-    inputs:
-      force_release:
-        description: "Force a release (bypass some checks)"
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: write
@@ -24,14 +17,6 @@ jobs:
     environment: production
 
     steps:
-      - name: Debug Workflow Trigger Information
-        run: |
-          echo "Triggered by: ${{ github.event_name }}"
-          echo "Ref: ${{ github.ref }}"
-          echo "Commit Message: $(git log -1 --pretty=%B)"
-          echo "Repository: ${{ github.repository }}"
-          echo "Actor: ${{ github.actor }}"
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -52,18 +37,6 @@ jobs:
       - name: Install Dependencies
         run: pnpm i
 
-      - name: Generate token for semantic-release
-        id: generate_token
-        uses: tibdex/github-app-token@v2
-        with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.PRIVATE_KEY }}
-          installation_id: ${{ secrets.INSTALLATION_ID }}
-
-      - name: Validate Conventional Commits
-        run: |
-          npx commitlint --from HEAD~1 --to HEAD || echo "Commit message validation failed"
-
       - name: Run tests
         run: pnpm test || echo "No tests implemented yet"
 
@@ -77,15 +50,8 @@ jobs:
       - name: Semantic Release
         id: semantic
         env:
-          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
-        run: |
-          # Add force release flag if manually triggered with force option
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.force_release }}" == "true" ]]; then
-            echo "Force release enabled. Bypassing some checks."
-            pnpm release --no-ci
-          else
-            pnpm release
-          fi
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm release
 
       - name: Get new version
         id: get-version
@@ -131,7 +97,7 @@ jobs:
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROD }}
-          repo_token: ${{ steps.generate_token.outputs.token }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "dist"
           api_location: ""
@@ -144,10 +110,3 @@ jobs:
           echo "URL: https://kind-water-0ea27f900.6.azurestaticapps.net"
           echo "Build artifact: taskhub-production-v${{ steps.get-version.outputs.version }}.zip stored in Azure Blob Storage"
           echo "Download link: ${{ steps.upload_artifact.outputs.download_url }}"
-
-      - name: Failure Debugging
-        if: failure()
-        run: |
-          echo "Release or deployment failed. Check previous steps for detailed errors."
-          echo "Semantic Release Step Status: ${{ steps.semantic.outcome }}"
-          echo "Deploy Step Status: ${{ steps.deploy.outcome }}"
