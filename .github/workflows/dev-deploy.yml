@@ -36,6 +36,43 @@ jobs:
           VITE_ENVIRONMENT: "development"
           VITE_LOGGING_LEVEL: "debug"
 
+      - name: Create build artifact
+        id: create_artifact
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          cd dist
+          zip -r ../taskhub-dev-$TIMESTAMP.zip .
+          cd ..
+          echo "Build timestamp: $(date)" > build-info.txt
+          echo "Commit: ${{ github.sha }}" >> build-info.txt
+          echo "Branch: develop" >> build-info.txt
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+
+      - name: Upload build artifact to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: taskhub-dev-build
+          path: |
+            taskhub-dev-*.zip
+            build-info.txt
+          retention-days: 30
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Make script executable
+        run: chmod +x .github/scripts/upload-dev-artifact.sh
+
+      - name: Upload build to Azure Blob Storage
+        id: upload_artifact
+        run: |
+          ./.github/scripts/upload-dev-artifact.sh \
+            ${{ steps.create_artifact.outputs.timestamp }} \
+            ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }} \
+            ${{ github.sha }}
+
       - name: Deploy to Azure Static Web Apps
         id: deploy
         uses: Azure/static-web-apps-deploy@v1
@@ -51,4 +88,6 @@ jobs:
         if: success()
         run: |
           echo "🚀 Successfully deployed to development environment"
-          echo "URL: https://dev.taskhub.com"
+          echo "URL: https://green-grass-07a60cd00.6.azurestaticapps.net"
+          echo "Build artifact: taskhub-dev-${{ steps.create_artifact.outputs.timestamp }}.zip stored in Azure Blob Storage"
+          echo "Download link: ${{ steps.upload_artifact.outputs.download_url }}"
