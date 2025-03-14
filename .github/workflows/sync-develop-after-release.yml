@@ -1,0 +1,73 @@
+name: Sync develop after release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "package.json" # This will trigger when semantic-release updates the package.json
+
+jobs:
+  sync-develop:
+    name: Create PR to sync develop with main
+    runs-on: ubuntu-latest
+    # Skip this workflow if the commit message contains [skip ci]
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Important to fetch all history for comparison
+          token: ${{ secrets.GITHUB_TOKEN }} # Use GitHub token for authentication
+
+      - name: Check if release commit
+        id: check_release
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          if [[ "$COMMIT_MSG" == *"chore(release)"* ]]; then
+            echo "is_release=true" >> $GITHUB_OUTPUT
+            echo "Found release commit: $COMMIT_MSG"
+          else
+            echo "is_release=false" >> $GITHUB_OUTPUT
+            echo "Not a release commit: $COMMIT_MSG"
+          fi
+
+      - name: Configure Git
+        if: steps.check_release.outputs.is_release == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create sync branch
+        if: steps.check_release.outputs.is_release == 'true'
+        run: |
+          # Create a new branch from main
+          VERSION=$(node -p "require('./package.json').version")
+          BRANCH_NAME="chore/sync-develop-after-release-v$VERSION"
+          git checkout -b $BRANCH_NAME
+          echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+          # Push the branch to remote
+          git push origin $BRANCH_NAME
+        id: create_branch
+
+      - name: Create Pull Request
+        if: steps.check_release.outputs.is_release == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ steps.create_branch.outputs.branch }}
+          base: develop
+          title: "chore: sync develop with main after release"
+          body: |
+            This PR syncs the develop branch with main after a release.
+
+            It ensures that the version bump and changelog updates from main are brought into develop.
+
+            Automated PR created by GitHub Actions.
+          labels: |
+            automated
+            sync
+            maintenance
+          draft: false
