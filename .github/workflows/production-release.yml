@@ -23,6 +23,14 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+          installation_id: ${{ secrets.INSTALLATION_ID }}
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -50,7 +58,7 @@ jobs:
       - name: Semantic Release
         id: semantic
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: pnpm release
 
       - name: Get new version
