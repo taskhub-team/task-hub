@@ -7,21 +7,13 @@
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
     [
-      "semantic-release-github-pullrequest",
+      "@semantic-release/git",
       {
         "assets": [
           "CHANGELOG.md",
           "package.json"
         ],
-        "pullrequestTitle": "chore(release): ${nextRelease.version} [skip ci]",
-        "pullrequestDescription": "${nextRelease.notes}",
-        "labels": [
-          "release"
-        ],
-        "assignees": [
-          "mandy8055",
-          "mandy8055_fe"
-        ]
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ],
     "@semantic-release/github"
