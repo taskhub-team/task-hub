@@ -1,0 +1,65 @@
+name: Auto Backmerge PR Creation
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-backmerge-pr:
+    name: Create Backmerge PR
+    runs-on: ubuntu-latest
+    environment: development
+    # Only run after semantic-release has completed
+    if: "contains(github.event.head_commit.message, 'chore(release)')"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+          installation_id: ${{ secrets.INSTALLATION_ID }}
+
+      - name: Fetch all branches
+        run: |
+          git remote set-url origin https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/${{ github.repository }}
+          git fetch origin
+
+      - name: Create Backmerge PR
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: |
+          # Get the current version
+          VERSION=$(node -p "require('./package.json').version")
+
+          # Create a branch for the backmerge
+          git checkout -b backmerge/v$VERSION
+
+          # Push the branch
+          git push origin backmerge/v$VERSION
+
+          # Create PR using GitHub CLI
+          PR_URL=$(gh pr create \
+            --base develop \
+            --head backmerge/v$VERSION \
+            --title "Backmerge: Release v$VERSION from main to develop" \
+            --body "This PR backmerges the semantic-release changes from \`main\` to \`develop\`. It includes version bumps and changelog updates from release v$VERSION.\n\n**This PR requires manual review and merge.**" \
+            --label "backmerge")
+
+          echo "PR created: $PR_URL"
+
+          # Add a comment to the PR
+          PR_NUMBER=$(echo $PR_URL | grep -oE '[0-9]+$')
+          gh pr comment $PR_NUMBER --body "⚠️ **Developer Action Required**: Please review and merge this backmerge PR to synchronize \`develop\` with the latest release changes from \`main\`."
